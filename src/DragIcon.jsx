@@ -1,4 +1,4 @@
-function Drag() {
+function DragIcon() {
   return (
     <svg
       viewBox="0 0 48 48"
@@ -24,4 +24,4 @@ function Drag() {
   );
 }
 
-export default Drag;
+export default DragIcon;

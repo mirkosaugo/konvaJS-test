@@ -3,7 +3,7 @@ import { Rect, Group } from "react-konva";
 
 import { Html } from "react-konva-utils";
 
-import Drag from "./Drag";
+import DragIcon from "./DragIcon";
 
 // add this to shape props to force a different cursor
 const dragStuff = () => {
@@ -38,7 +38,7 @@ function FakeCard({ x = 0, y = 0, title = "Title" }) {
         <h4 style={{ margin: 0 }}>{title}</h4>
         <input placeholder="DOM input from Konva nodes" />
         <textarea placeholder="write something..." />
-        <Drag />
+        <DragIcon />
       </Html>
       <Rect x={0} y={-32} width={32} height={32} {...dragStuff()} />
     </Group>
