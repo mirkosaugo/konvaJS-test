@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Global.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Global.js</h1>
+
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>
+/*
+ * Konva JavaScript Framework v@@version
+ * http://konvajs.github.io/
+ * Licensed under the MIT or GPL Version 2 licenses.
+ * Date: @@date
+ *
+ * Original work Copyright (C) 2011 - 2013 by Eric Rowell (KineticJS)
+ * Modified work Copyright (C) 2014 - 2015 by Anton Lavrenov (Konva)
+ *
+ * @license
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+/**
+ * @namespace Konva
+ */
+/*jshint -W079, -W020*/
+var Konva = {};
+(function(root) {
+    'use strict';
+    var PI_OVER_180 = Math.PI / 180;
+
+    Konva = {
+        // public
+        version: '@@version',
+
+        // private
+        stages: [],
+        idCounter: 0,
+        ids: {},
+        names: {},
+        shapes: {},
+        listenClickTap: false,
+        inDblClickWindow: false,
+
+        // configurations
+        enableTrace: false,
+        traceArrMax: 100,
+        dblClickWindow: 400,
+        /**
+         * Global pixel ratio configuration. KonvaJS automatically detect pixel ratio of current device.
+         * But you may override such property, if you want to use your value.
+         * @property pixelRatio
+         * @default undefined
+         * @memberof Konva
+         * @example
+         * Konva.pixelRatio = 1;
+         */
+        pixelRatio: undefined,
+        /**
+         * Drag distance property. If you start to drag a node you may want to wait until pointer is moved to some distance from start point,
+         * only then start dragging.
+         * @property dragDistance
+         * @default 0
+         * @memberof Konva
+         * @example
+         * Konva.dragDistance = 10;
+         */
+        dragDistance: 0,
+        /**
+         * Use degree values for angle properties. You may set this property to false if you want to use radiant values.
+         * @property angleDeg
+         * @default true
+         * @memberof Konva
+         * @example
+         * node.rotation(45); // 45 degrees
+         * Konva.angleDeg = false;
+         * node.rotation(Math.PI / 2); // PI/2 radian
+         */
+        angleDeg: true,
+         /**
+         * Show different warnings about errors or wrong API usage
+         * @property showWarnings
+         * @default true
+         * @memberof Konva
+         * @example
+         * Konva.showWarnings = false;
+         */
+        showWarnings: true,
+
+
+
+        /**
+         * @namespace Filters
+         * @memberof Konva
+         */
+        Filters: {},
+
+        /**
+         * returns whether or not drag and drop is currently active
+         * @method
+         * @memberof Konva
+         */
+        isDragging: function() {
+            var dd = Konva.DD;
+
+            // if DD is not included with the build, then
+            // drag and drop is not even possible
+            if (dd) {
+                return dd.isDragging;
+            } else {
+                return false;
+            }
+        },
+        /**
+        * returns whether or not a drag and drop operation is ready, but may
+        *  not necessarily have started
+        * @method
+        * @memberof Konva
+        */
+        isDragReady: function() {
+            var dd = Konva.DD;
+
+            // if DD is not included with the build, then
+            // drag and drop is not even possible
+            if (dd) {
+                return !!dd.node;
+            } else {
+                return false;
+            }
+        },
+        _addId: function(node, id) {
+            if(id !== undefined) {
+                this.ids[id] = node;
+            }
+        },
+        _removeId: function(id) {
+            if(id !== undefined) {
+                delete this.ids[id];
+            }
+        },
+        _addName: function(node, name) {
+            if(name) {
+                if(!this.names[name]) {
+                    this.names[name] = [];
+                }
+                this.names[name].push(node);
+            }
+        },
+        _removeName: function(name, _id) {
+            if(!name) {
+                return;
+            }
+            var nodes = this.names[name];
+            if(!nodes) {
+                return;
+            }
+            for(var n = 0; n &lt; nodes.length; n++) {
+                var no = nodes[n];
+                if(no._id === _id) {
+                    nodes.splice(n, 1);
+                }
+            }
+            if(nodes.length === 0) {
+                delete this.names[name];
+            }
+        },
+        getAngle: function(angle) {
+            return this.angleDeg ? angle * PI_OVER_180 : angle;
+        },
+        _parseUA: function(userAgent) {
+            var ua = userAgent.toLowerCase(),
+                // jQuery UA regex
+                match = /(chrome)[ \/]([\w.]+)/.exec( ua ) ||
+                /(webkit)[ \/]([\w.]+)/.exec( ua ) ||
+                /(opera)(?:.*version|)[ \/]([\w.]+)/.exec( ua ) ||
+                /(msie) ([\w.]+)/.exec( ua ) ||
+                ua.indexOf('compatible') &lt; 0 &amp;&amp; /(mozilla)(?:.*? rv:([\w.]+)|)/.exec( ua ) ||
+                [],
+
+                // adding mobile flag as well
+                mobile = !!(userAgent.match(/Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile/i)),
+                ieMobile = !!(userAgent.match(/IEMobile/i));
+
+            return {
+                browser: match[ 1 ] || '',
+                version: match[ 2 ] || '0',
+
+                // adding mobile flab
+                mobile: mobile,
+                ieMobile: ieMobile  // If this is true (i.e., WP8), then Konva touch events are executed instead of equivalent Konva mouse events
+            };
+        },
+        // user agent
+        UA: undefined
+    };
+
+    Konva.UA = Konva._parseUA((root.navigator &amp;&amp; root.navigator.userAgent) || '');
+
+})(this);
+
+// Uses Node, AMD or browser globals to create a module.
+
+// If you want something that will work in other stricter CommonJS environments,
+// or if you need to create a circular dependency, see commonJsStrict.js
+
+// Defines a module "returnExports" that depends another module called "b".
+// Note that the name of the module is implied by the file name. It is best
+// if the file name and the exported global have matching names.
+
+// If the 'b' module also uses this type of boilerplate, then
+// in the browser, it will create a global .b that is used below.
+
+// If you do not want to support the browser global path, then you
+// can remove the `root` use and the passing `this` as the first arg to
+// the top function.
+
+// if the module has no dependencies, the above pattern can be simplified to
+( function(root, factory) {
+    'use strict';
+    if( typeof exports === 'object') {
+        var KonvaJS = factory();
+        // runtime-check for browserify and nw.js (node-webkit)
+        if(global.window &amp;&amp; global.window.document) {
+            Konva.document = global.window.document;
+            Konva.window = global.window;
+        } else {
+            // Node. Does not work with strict CommonJS, but
+            // only CommonJS-like enviroments that support module.exports,
+            // like Node.
+            var Canvas = require('canvas');
+            var jsdom = require('jsdom').jsdom;
+
+            Konva.document = jsdom('&lt;!DOCTYPE html>&lt;html>&lt;head>&lt;/head>&lt;body>&lt;/body>&lt;/html>');
+            Konva.window = Konva.document.parentWindow;
+            Konva.window.Image = Canvas.Image;
+            Konva._nodeCanvas = Canvas;
+        }
+
+        Konva.root = root;
+        module.exports = KonvaJS;
+        return;
+    }
+    else if( typeof define === 'function' &amp;&amp; define.amd) {
+        // AMD. Register as an anonymous module.
+        define(factory);
+    }
+    Konva.document = document;
+    Konva.window = window;
+    Konva.root = root;
+}(this, function() {
+    'use strict';
+    // Just return a value to define the module export.
+    // This example returns an object, but the module
+    // can return a function as the exported value.
+    return Konva;
+}));
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Konva.Animation.html">Animation</a></li><li><a href="Konva.Arc.html">Arc</a></li><li><a href="Konva.Arrow.html">Arrow</a></li><li><a href="Konva.BaseLayer.html">BaseLayer</a></li><li><a href="Konva.Canvas.html">Canvas</a></li><li><a href="Konva.Circle.html">Circle</a></li><li><a href="Konva.Collection.html">Collection</a></li><li><a href="Konva.Container.html">Container</a></li><li><a href="Konva.Context.html">Context</a></li><li><a href="Konva.Ellipse.html">Ellipse</a></li><li><a href="Konva.FastLayer.html">FastLayer</a></li><li><a href="Konva.Group.html">Group</a></li><li><a href="Konva.Image.html">Image</a></li><li><a href="Konva.Label.html">Label</a></li><li><a href="Konva.Layer.html">Layer</a></li><li><a href="Konva.Line.html">Line</a></li><li><a href="Konva.Node.html">Node</a></li><li><a href="Konva.Path.html">Path</a></li><li><a href="Konva.Rect.html">Rect</a></li><li><a href="Konva.RegularPolygon.html">RegularPolygon</a></li><li><a href="Konva.Ring.html">Ring</a></li><li><a href="Konva.Shape.html">Shape</a></li><li><a href="Konva.Sprite.html">Sprite</a></li><li><a href="Konva.Stage.html">Stage</a></li><li><a href="Konva.Star.html">Star</a></li><li><a href="Konva.Tag.html">Tag</a></li><li><a href="Konva.Text.html">Text</a></li><li><a href="Konva.TextPath.html">TextPath</a></li><li><a href="Konva.Transform.html">Transform</a></li><li><a href="Konva.Tween.html">Tween</a></li><li><a href="Konva.Wedge.html">Wedge</a></li></ul><h3>Namespaces</h3><ul><li><a href="Konva.html">Konva</a></li><li><a href="Konva.Easings.html">Easings</a></li><li><a href="Konva.Filters.html">Filters</a></li><li><a href="Konva.Util.html">Util</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Thu May 28 2015 13:18:43 GMT+0700 (KRAT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: filters/Emboss.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: filters/Emboss.js</h1>
+
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>(function () {
+    /**
+     * Emboss Filter.
+     * Pixastic Lib - Emboss filter - v0.1.0
+     * Copyright (c) 2008 Jacob Seidelin, jseidelin@nihilogic.dk, http://blog.nihilogic.dk/
+     * License: [http://www.pixastic.com/lib/license.txt]
+     * @function
+     * @memberof Konva.Filters
+     * @param {Object} imageData
+     * @example
+     * node.cache();
+     * node.filters([Konva.Filters.Emboss]);
+     * node.embossStrength(0.8);
+     * node.embossWhiteLevel(0.3);
+     * node.embossDirection('right');
+     * node.embossBlend(true);
+     */
+    Konva.Filters.Emboss = function (imageData) {
+
+        // pixastic strength is between 0 and 10.  I want it between 0 and 1
+        // pixastic greyLevel is between 0 and 255.  I want it between 0 and 1.  Also,
+        // a max value of greyLevel yields a white emboss, and the min value yields a black
+        // emboss.  Therefore, I changed greyLevel to whiteLevel
+        var strength = this.embossStrength() * 10,
+            greyLevel = this.embossWhiteLevel() * 255,
+            direction = this.embossDirection(),
+            blend = this.embossBlend(),
+            dirY = 0,
+            dirX = 0,
+            data = imageData.data,
+            w = imageData.width,
+            h = imageData.height,
+            w4 = w * 4,
+            y = h;
+
+        switch (direction) {
+            case 'top-left':
+                dirY = -1;
+                dirX = -1;
+                break;
+            case 'top':
+                dirY = -1;
+                dirX = 0;
+                break;
+            case 'top-right':
+                dirY = -1;
+                dirX = 1;
+                break;
+            case 'right':
+                dirY = 0;
+                dirX = 1;
+                break;
+            case 'bottom-right':
+                dirY = 1;
+                dirX = 1;
+                break;
+            case 'bottom':
+                dirY = 1;
+                dirX = 0;
+                break;
+            case 'bottom-left':
+                dirY = 1;
+                dirX = -1;
+                break;
+            case 'left':
+                dirY = 0;
+                dirX = -1;
+                break;
+        }
+
+        do {
+            var offsetY = (y - 1) * w4;
+
+            var otherY = dirY;
+            if (y + otherY &lt; 1){
+                otherY = 0;
+            }
+            if (y + otherY > h) {
+                otherY = 0;
+            }
+
+            var offsetYOther = (y - 1 + otherY) * w * 4;
+
+            var x = w;
+            do {
+                var offset = offsetY + (x - 1) * 4;
+
+                var otherX = dirX;
+                if (x + otherX &lt; 1){
+                    otherX = 0;
+                }
+                if (x + otherX > w) {
+                    otherX = 0;
+                }
+
+                var offsetOther = offsetYOther + (x - 1 + otherX) * 4;
+
+                var dR = data[offset] - data[offsetOther];
+                var dG = data[offset + 1] - data[offsetOther + 1];
+                var dB = data[offset + 2] - data[offsetOther + 2];
+
+                var dif = dR;
+                var absDif = dif > 0 ? dif : -dif;
+
+                var absG = dG > 0 ? dG : -dG;
+                var absB = dB > 0 ? dB : -dB;
+
+                if (absG > absDif) {
+                    dif = dG;
+                }
+                if (absB > absDif) {
+                    dif = dB;
+                }
+
+                dif *= strength;
+
+                if (blend) {
+                    var r = data[offset] + dif;
+                    var g = data[offset + 1] + dif;
+                    var b = data[offset + 2] + dif;
+
+                    data[offset] = (r > 255) ? 255 : (r &lt; 0 ? 0 : r);
+                    data[offset + 1] = (g > 255) ? 255 : (g &lt; 0 ? 0 : g);
+                    data[offset + 2] = (b > 255) ? 255 : (b &lt; 0 ? 0 : b);
+                } else {
+                    var grey = greyLevel - dif;
+                    if (grey &lt; 0) {
+                        grey = 0;
+                    } else if (grey > 255) {
+                        grey = 255;
+                    }
+
+                    data[offset] = data[offset + 1] = data[offset + 2] = grey;
+                }
+
+            } while (--x);
+        } while (--y);
+    };
+
+    Konva.Factory.addGetterSetter(Konva.Node, 'embossStrength', 0.5, null, Konva.Factory.afterSetFilter);
+    /**
+    * get/set emboss strength. Use with {@link Konva.Filters.Emboss} filter.
+    * @name embossStrength
+    * @method
+    * @memberof Konva.Node.prototype
+    * @param {Number} level between 0 and 1.  Default is 0.5
+    * @returns {Number}
+    */
+
+    Konva.Factory.addGetterSetter(Konva.Node, 'embossWhiteLevel', 0.5, null, Konva.Factory.afterSetFilter);
+    /**
+    * get/set emboss white level. Use with {@link Konva.Filters.Emboss} filter.
+    * @name embossWhiteLevel
+    * @method
+    * @memberof Konva.Node.prototype
+    * @param {Number} embossWhiteLevel between 0 and 1.  Default is 0.5
+    * @returns {Number}
+    */
+
+    Konva.Factory.addGetterSetter(Konva.Node, 'embossDirection', 'top-left', null, Konva.Factory.afterSetFilter);
+    /**
+    * get/set emboss direction. Use with {@link Konva.Filters.Emboss} filter.
+    * @name embossDirection
+    * @method
+    * @memberof Konva.Node.prototype
+    * @param {String} embossDirection can be top-left, top, top-right, right, bottom-right, bottom, bottom-left or left
+    *   The default is top-left
+    * @returns {String}
+    */
+
+    Konva.Factory.addGetterSetter(Konva.Node, 'embossBlend', false, null, Konva.Factory.afterSetFilter);
+    /**
+    * get/set emboss blend. Use with {@link Konva.Filters.Emboss} filter.
+    * @name embossBlend
+    * @method
+    * @memberof Konva.Node.prototype
+    * @param {Boolean} embossBlend
+    * @returns {Boolean}
+    */
+})();
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Konva.Animation.html">Animation</a></li><li><a href="Konva.Arc.html">Arc</a></li><li><a href="Konva.Arrow.html">Arrow</a></li><li><a href="Konva.BaseLayer.html">BaseLayer</a></li><li><a href="Konva.Canvas.html">Canvas</a></li><li><a href="Konva.Circle.html">Circle</a></li><li><a href="Konva.Collection.html">Collection</a></li><li><a href="Konva.Container.html">Container</a></li><li><a href="Konva.Context.html">Context</a></li><li><a href="Konva.Ellipse.html">Ellipse</a></li><li><a href="Konva.FastLayer.html">FastLayer</a></li><li><a href="Konva.Group.html">Group</a></li><li><a href="Konva.Image.html">Image</a></li><li><a href="Konva.Label.html">Label</a></li><li><a href="Konva.Layer.html">Layer</a></li><li><a href="Konva.Line.html">Line</a></li><li><a href="Konva.Node.html">Node</a></li><li><a href="Konva.Path.html">Path</a></li><li><a href="Konva.Rect.html">Rect</a></li><li><a href="Konva.RegularPolygon.html">RegularPolygon</a></li><li><a href="Konva.Ring.html">Ring</a></li><li><a href="Konva.Shape.html">Shape</a></li><li><a href="Konva.Sprite.html">Sprite</a></li><li><a href="Konva.Stage.html">Stage</a></li><li><a href="Konva.Star.html">Star</a></li><li><a href="Konva.Tag.html">Tag</a></li><li><a href="Konva.Text.html">Text</a></li><li><a href="Konva.TextPath.html">TextPath</a></li><li><a href="Konva.Transform.html">Transform</a></li><li><a href="Konva.Tween.html">Tween</a></li><li><a href="Konva.Wedge.html">Wedge</a></li></ul><h3>Namespaces</h3><ul><li><a href="Konva.html">Konva</a></li><li><a href="Konva.Easings.html">Easings</a></li><li><a href="Konva.Filters.html">Filters</a></li><li><a href="Konva.Util.html">Util</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Thu May 28 2015 13:18:43 GMT+0700 (KRAT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
