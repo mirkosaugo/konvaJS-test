@@ -48,6 +48,7 @@ const App = () => {
         width={window.innerWidth}
         height={window.innerHeight}
         onWheel={zoomStage}
+        // TODO: find a better solution to change cursor on drag cuz this is affect to all the stage
         onMouseDown={(e) => {
           const container = e.target.getStage().container();
           const content = container.querySelector(".konvajs-content");
@@ -58,6 +59,7 @@ const App = () => {
           const content = container.querySelector(".konvajs-content");
           content.style.cursor = "grab";
         }}
+        // TODO: enable panning only on space key press like figma
         draggable
       >
         <Layer>
