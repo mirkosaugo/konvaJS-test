@@ -36,8 +36,6 @@ const App = () => {
     }
   };
 
-  console.log(stageRef);
-
   // TODO: test with https://www.npmjs.com/package/json-server to get/save data from/in a json file
 
   return (
@@ -64,7 +62,7 @@ const App = () => {
       >
         <Layer>
           <Text
-            text="TODO: Enable panning only on space key press like figma + move arrows on Cards drag"
+            text="TODO: Enable panning only on space key press like figma? + move arrows on Cards drag"
             fontSize={15}
             x={800}
             y={32}
